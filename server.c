@@ -85,10 +85,10 @@ int main(int argc, char *argv[]){
 
         /* (a) Reception */
         printf("Attente de reception ... ");
-        if (recvfrom(sd0,msg_in,sizeof(msg_in),0, (struct sockaddr *)NULL, NULL) == -1)
+        if (recvfrom(sd0,msg_in,sizeof(msg_in),0, (struct sockaddr *)padr0, &ls) == -1)
             printf("inachevee : %s !\n",msg_in);
         else  {
-            printf("recue : valeur = %s !\n",msg_in);
+            printf("recue : valeur = %s !\nRecu de %s sur le port %d",msg_in, inet_ntoa(padr0->sin_addr), ntohs(padr0->sin_port));
 
             /* (b) Traitement : La reception est bonne, on fait evoluer i */
             i = atoi(msg_in);
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
 
             /* (c) Emission */
             printf("\n\nEnvoi(%d) ... ", looptime);
-            if (sendto(sd0,msg_out,sizeof(msg_out),0,(struct sockaddr *)padr1,ls) >0)
+            if (sendto(sd0,msg_out,sizeof(msg_out),0,(struct sockaddr *)padr0, ls) >0)
                 printf("termine : valeur = %s !\n",msg_out);
             else
                 printf("inacheve : %s !\n",msg_out);
