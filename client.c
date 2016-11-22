@@ -13,6 +13,8 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
+#define T_MAX 30
+
 void main(int argc, char *argv[]){
     int looptime = 0;                                                           /* Numero de la boucle */
     socklen_t ls = sizeof(struct sockaddr_in);                                  /* Taille des adresses */
@@ -20,21 +22,24 @@ void main(int argc, char *argv[]){
     /*---- Caracterisation de la socket d'émission ----------*/
     int sd0;                                                                    /* Descripteur  */
     int ps0 = 0;                                                                /* Port Client  */
-    int ps1 = 5001;                                                             /* Port Serveur */
+    int ps1;                                                                    /* Port Serveur */
     struct sockaddr_in adr0, *padr0 = &adr0;                                    /* Adresse  */
     struct sockaddr_in adr1, *padr1 = &adr1;
     struct hostent *hp1;                                                        /* Host serveur */
 
     /*---- Buffers pour Messages -------------------------------*/
-    char msg_in[3] = "0";                                                       /* Message recu de "0" a "99" */
-    char msg_out[3] = "0";                                                      /* Message a envoyer "0" a "99" */
+    char msg_in[T_MAX] = "0";                                                       /* Message recu de "0" a "99" */
+    char msg_out[T_MAX] = "0";                                                      /* Message a envoyer "0" a "99" */
 
     struct sockaddr_in adr2, *padr2 = &adr2;
 
     /*---- (0) - Verifications de base ----*/
-    if (argc != 2){
-        fprintf(stderr,"Syntaxe d'appel : client <addr_server> \n");
+    if (argc != 3){
+        fprintf(stderr,"Syntaxe d'appel : client <addr_server> <port> \n");
         exit(2);
+    }
+    else{
+        ps1 = atoi(argv[2]);
     }
 
     /*---- (1) - Preparation du socket ----*/
@@ -68,7 +73,7 @@ void main(int argc, char *argv[]){
     else{   /*---------------------- Recuperation de l'adresse IP ---------------------*/
         memcpy(&adr1.sin_addr.s_addr, hp1->h_addr, hp1->h_length);
         adr1.sin_family = AF_INET;
-        adr1.sin_port   = htons(ps1);                                           // <---- TODO Recup PORT du client
+        adr1.sin_port   = htons(ps1);
         fprintf(stdout,"machine %s --> %s \n", hp1->h_name, inet_ntoa(adr1.sin_addr));
     }
 
@@ -77,6 +82,10 @@ void main(int argc, char *argv[]){
         int i;
         struct sockaddr_in adr2,  *padr2 = &adr2;
         printf("\n------------------\n");
+
+        /*---- On invite l'utilisateur a rentre le calcul a realiser ----*/
+        printf("Entrez votre calcul (ex : 1 + 2)\nOu une assignation de variable(x,y ou z) x = 0\n");
+        fgets(msg_out, T_MAX, stdin);
 
         /* (a) Emission */
         printf("\n\nEnvoi(%d) ... ", looptime);
@@ -87,19 +96,11 @@ void main(int argc, char *argv[]){
 
         /* (b) Reception */
         printf("Attente de reception ... ");
-        if (recvfrom(sd0,msg_in,sizeof(msg_in),0, (struct sockaddr *)padr0, &ls) == -1)
+        if (recvfrom(sd0,msg_in,sizeof(msg_in),0, (struct sockaddr *)padr1, &ls) == -1)
             printf("inachevee : %s !\n",msg_in);
         else  {
             printf("recue : valeur = %s !\n",msg_in);
-
-            /* (b) Traitement : La reception est bonne, on fait evoluer i */
-            i = atoi(msg_in);
-            i = (i+1)%100;
-            sprintf(msg_out,"%d",i);
         }
-        sleep(1);
         looptime++;
     }
-
-    // TODO
 }
